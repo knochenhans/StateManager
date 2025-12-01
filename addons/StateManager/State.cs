@@ -1,22 +1,18 @@
 using Godot;
 using System;
 
-public partial class State<TState> : GodotObject where TState : notnull
-{
-    public Action OnEnter { get; }
-    public Action OnExit { get; }
-    public float Duration { get; set; } = 0.0f;
-    public TState NextStateName { get; set; }
-    public bool DurationIsRandom { get; set; } = false;
+#nullable enable
 
-    public State(Action onEnter = null, Action onExit = null, float duration = 0.0f, TState nextStateName = default, bool durationIsRandom = false)
-    {
-        OnEnter = onEnter;
-        OnExit = onExit;
-        Duration = duration;
-        NextStateName = nextStateName;
-        DurationIsRandom = durationIsRandom;
-    }
+public partial class State<TState>(Action? onEnter, Action? onExit, double duration = 0.0, double preActivationBaseTime = 0.0, double preActivationRandomTimeMin = 0.0, double preActivationRandomTimeMax = 0.0, TState? nextStateName = default, bool durationIsRandom = false) : GodotObject where TState : notnull
+{
+    public Action? OnEnter = onEnter;
+    public Action? OnExit = onExit;
+    public double Duration = duration;
+    public double PreActivationBaseTime = preActivationBaseTime;
+    public double PreActivationRandomTimeMin = preActivationRandomTimeMin;
+    public double PreActivationRandomTimeMax = preActivationRandomTimeMax;
+    public TState? NextStateName = nextStateName;
+    public bool DurationIsRandom = durationIsRandom;
 
     public void Enter() => OnEnter?.Invoke();
     public void Exit() => OnExit?.Invoke();
