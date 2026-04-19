@@ -1,5 +1,6 @@
 using Godot;
 using Godot.Collections;
+
 using System;
 
 public partial class StateManager<[MustBeVariant] TState> : Node where TState : notnull
