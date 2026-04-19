@@ -59,7 +59,7 @@ public partial class StateManager<[MustBeVariant] TState> : Node where TState : 
         if (state == null)
             return;
 
-        if (name.Equals(currentStateName))
+        if (name.Equals(currentStateName) && !silent)
             return;
 
         // stop any running timers / clear pending transitions before starting a new enter
