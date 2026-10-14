@@ -8,8 +8,8 @@ public partial class StateManager<[MustBeVariant] TState> where TState : notnull
 
     private Dictionary<TState, State<TState>> states = [];
 
-    private float stateTimeRemaining = 0.0f;
-    private float preActivationTimeRemaining = 0.0f;
+    private double stateTimeRemaining = 0.0f;
+    private double preActivationTimeRemaining = 0.0f;
 
     private TState pendingNextState = default;
     private bool hasPendingNextState = false;
@@ -21,15 +21,15 @@ public partial class StateManager<[MustBeVariant] TState> where TState : notnull
     {
         if (hasPendingPreActivation)
         {
-            preActivationTimeRemaining -= (float)delta;
-            if (preActivationTimeRemaining <= 0.0f)
+            preActivationTimeRemaining -= delta;
+            if (preActivationTimeRemaining <= 0.0)
                 OnPreActivationTimeout();
         }
 
         if (hasPendingNextState)
         {
-            stateTimeRemaining -= (float)delta;
-            if (stateTimeRemaining <= 0.0f)
+            stateTimeRemaining -= delta;
+            if (stateTimeRemaining <= 0.0)
                 OnStateTimerTimeout();
         }
     }
@@ -64,17 +64,17 @@ public partial class StateManager<[MustBeVariant] TState> where TState : notnull
             return;
 
         // Stop any running timers / clear pending transitions before starting a new enter
-        stateTimeRemaining = 0.0f;
+        stateTimeRemaining = 0.0;
         hasPendingNextState = false;
-        preActivationTimeRemaining = 0.0f;
+        preActivationTimeRemaining = 0.0;
         hasPendingPreActivation = false;
 
         // If the state defines a pre-activation wait, start the pre-activation countdown
-        if (state.PreActivationBaseTime + state.PreActivationRandomTimeMin + state.PreActivationRandomTimeMax > 0.0f)
+        if (state.PreActivationBaseTime + state.PreActivationRandomTimeMin + state.PreActivationRandomTimeMax > 0.0)
         {
             pendingStateToActivate = name;
             hasPendingPreActivation = true;
-            preActivationTimeRemaining = (float)(state.PreActivationBaseTime + GD.RandRange(state.PreActivationRandomTimeMin, state.PreActivationRandomTimeMax));
+            preActivationTimeRemaining = state.PreActivationBaseTime + GD.RandRange(state.PreActivationRandomTimeMin, state.PreActivationRandomTimeMax);
             return;
         }
 
@@ -93,12 +93,12 @@ public partial class StateManager<[MustBeVariant] TState> where TState : notnull
         currentStateName = name;
         StateChanged?.Invoke(silent);
 
-        if (state.Duration > 0.0f)
+        if (state.Duration > 0.0)
         {
             if (state.DurationIsRandom)
-                state.Duration = (float)GD.RandRange(0.1, state.Duration);
+                state.Duration = GD.RandRange(0.1, state.Duration);
 
-            stateTimeRemaining = (float)state.Duration;
+            stateTimeRemaining = state.Duration;
             pendingNextState = (TState)Convert.ChangeType(state.NextStateName, typeof(TState));
             hasPendingNextState = true;
         }
