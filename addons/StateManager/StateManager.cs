@@ -1,37 +1,37 @@
 using Godot;
-using Godot.Collections;
-
 using System;
+using System.Collections.Generic;
 
-public partial class StateManager<[MustBeVariant] TState> : Node where TState : notnull
+public partial class StateManager<[MustBeVariant] TState> where TState : notnull
 {
-    [Signal] public delegate void StateChangedEventHandler(bool silent = false);
+    public event Action<bool> StateChanged;
 
     private Dictionary<TState, State<TState>> states = [];
-    private Timer stateTimer;
-    private Timer preActivationTimer;
+
+    private float stateTimeRemaining = 0.0f;
+    private float preActivationTimeRemaining = 0.0f;
+
     private TState pendingNextState = default;
     private bool hasPendingNextState = false;
     private TState pendingStateToActivate = default;
     private bool hasPendingPreActivation = false;
     private TState currentStateName = default;
 
-    public StateManager()
+    public void Update(double delta)
     {
-        stateTimer = new Timer
+        if (hasPendingPreActivation)
         {
-            OneShot = true
-        };
-        stateTimer.Timeout += OnStateTimerTimeout;
-        AddChild(stateTimer);
+            preActivationTimeRemaining -= (float)delta;
+            if (preActivationTimeRemaining <= 0.0f)
+                OnPreActivationTimeout();
+        }
 
-        // timer used to wait before activating a state (PreActivationTime)
-        preActivationTimer = new Timer
+        if (hasPendingNextState)
         {
-            OneShot = true
-        };
-        preActivationTimer.Timeout += OnPreActivationTimeout;
-        AddChild(preActivationTimer);
+            stateTimeRemaining -= (float)delta;
+            if (stateTimeRemaining <= 0.0f)
+                OnStateTimerTimeout();
+        }
     }
 
     public void AddState(TState name, State<TState> state) => states[name] = state;
@@ -63,45 +63,44 @@ public partial class StateManager<[MustBeVariant] TState> : Node where TState : 
         if (name.Equals(currentStateName) && !silent)
             return;
 
-        // stop any running timers / clear pending transitions before starting a new enter
-        stateTimer.Stop();
+        // Stop any running timers / clear pending transitions before starting a new enter
+        stateTimeRemaining = 0.0f;
         hasPendingNextState = false;
-        preActivationTimer.Stop();
+        preActivationTimeRemaining = 0.0f;
         hasPendingPreActivation = false;
 
-        // if the state defines a pre-activation wait, start the pre-activation timer
+        // If the state defines a pre-activation wait, start the pre-activation countdown
         if (state.PreActivationBaseTime + state.PreActivationRandomTimeMin + state.PreActivationRandomTimeMax > 0.0f)
         {
             pendingStateToActivate = name;
             hasPendingPreActivation = true;
-            preActivationTimer.WaitTime = state.PreActivationBaseTime + GD.RandRange(state.PreActivationRandomTimeMin, state.PreActivationRandomTimeMax);
-            preActivationTimer.Start();
+            preActivationTimeRemaining = (float)(state.PreActivationBaseTime + GD.RandRange(state.PreActivationRandomTimeMin, state.PreActivationRandomTimeMax));
             return;
         }
 
-        // otherwise immediately activate
+        // Otherwise immediately activate
         ActivateState(name, silent);
     }
 
-    // activate a state (enter, start duration timer, handle immediate next)
+    // Activate a state (enter, start duration timer, handle immediate next)
     private void ActivateState(TState name, bool silent = false)
     {
         var state = GetState(name);
         if (state == null)
             return;
 
-        state.Enter();
+        state.Enter(silent);
         currentStateName = name;
-        EmitSignal(SignalName.StateChanged, silent);
+        StateChanged?.Invoke(silent);
 
         if (state.Duration > 0.0f)
         {
             if (state.DurationIsRandom)
                 state.Duration = (float)GD.RandRange(0.1, state.Duration);
-            stateTimer.WaitTime = state.Duration;
+
+            stateTimeRemaining = (float)state.Duration;
             pendingNextState = (TState)Convert.ChangeType(state.NextStateName, typeof(TState));
             hasPendingNextState = true;
-            stateTimer.Start();
         }
         else
         {
@@ -125,7 +124,10 @@ public partial class StateManager<[MustBeVariant] TState> : Node where TState : 
     private void OnStateTimerTimeout()
     {
         if (hasPendingNextState)
+        {
+            hasPendingNextState = false;
             EnterState(pendingNextState);
+        }
     }
 
     public TState GetCurrentStateName() => currentStateName;

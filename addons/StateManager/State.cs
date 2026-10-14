@@ -1,11 +1,17 @@
-using Godot;
 using System;
 
 #nullable enable
 
-public partial class State<TState>(Action? onEnter, Action? onExit, double duration = 0.0, double preActivationBaseTime = 0.0, double preActivationRandomTimeMin = 0.0, double preActivationRandomTimeMax = 0.0, TState? nextStateName = default, bool durationIsRandom = false) : GodotObject where TState : notnull
+public class State<TState>(Action<bool>? onEnter,
+                           Action? onExit,
+                           double duration = 0.0,
+                           double preActivationBaseTime = 0.0,
+                           double preActivationRandomTimeMin = 0.0,
+                           double preActivationRandomTimeMax = 0.0,
+                           TState? nextStateName = default,
+                           bool durationIsRandom = false) where TState : notnull
 {
-    public Action? OnEnter = onEnter;
+    public Action<bool>? OnEnter = onEnter;
     public Action? OnExit = onExit;
     public double Duration = duration;
     public double PreActivationBaseTime = preActivationBaseTime;
@@ -14,6 +20,6 @@ public partial class State<TState>(Action? onEnter, Action? onExit, double durat
     public TState? NextStateName = nextStateName;
     public bool DurationIsRandom = durationIsRandom;
 
-    public void Enter() => OnEnter?.Invoke();
+    public void Enter(bool silent = false) => OnEnter?.Invoke(silent);
     public void Exit() => OnExit?.Invoke();
 }
