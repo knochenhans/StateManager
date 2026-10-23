@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 public partial class StateManager<[MustBeVariant] TState> where TState : notnull
 {
-    public event Action<bool> StateChanged;
+    public event Action<TState, TState, bool> StateChanged;
 
     Dictionary<TState, State<TState>> states = [];
 
@@ -89,9 +89,11 @@ public partial class StateManager<[MustBeVariant] TState> where TState : notnull
         if (state == null)
             return;
 
+        var oldStateName = currentStateName;
+
         state.Enter(silent);
         currentStateName = name;
-        StateChanged?.Invoke(silent);
+        StateChanged?.Invoke(oldStateName, name, silent);
 
         if (state.Duration > 0.0)
         {
