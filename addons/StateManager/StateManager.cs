@@ -131,4 +131,30 @@ public partial class StateManager<[MustBeVariant] TState> where TState : notnull
     }
 
     public TState GetCurrentStateName() => currentStateName;
+
+    public SaveData Save()
+    {
+        var data = new SaveData
+        {
+            [nameof(currentStateName)] = currentStateName.ToString(),
+            [nameof(stateTimeRemaining)] = stateTimeRemaining,
+            [nameof(hasPendingNextState)] = hasPendingNextState,
+            [nameof(pendingNextState)] = pendingNextState.ToString(),
+            [nameof(preActivationTimeRemaining)] = preActivationTimeRemaining,
+            [nameof(hasPendingPreActivation)] = hasPendingPreActivation,
+            [nameof(pendingStateToActivate)] = pendingStateToActivate.ToString()
+        };
+        return data;
+    }
+
+    public void Load(SaveData data)
+    {
+        currentStateName = (TState)Enum.Parse(typeof(TState), data[nameof(currentStateName)].ToString());
+        stateTimeRemaining = (double)data[nameof(stateTimeRemaining)];
+        hasPendingNextState = (bool)data[nameof(hasPendingNextState)];
+        pendingNextState = (TState)Enum.Parse(typeof(TState), data[nameof(pendingNextState)].ToString());
+        preActivationTimeRemaining = (double)data[nameof(preActivationTimeRemaining)];
+        hasPendingPreActivation = (bool)data[nameof(hasPendingPreActivation)];
+        pendingStateToActivate = (TState)Enum.Parse(typeof(TState), data[nameof(pendingStateToActivate)].ToString());
+    }
 }
