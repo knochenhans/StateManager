@@ -6,16 +6,16 @@ public partial class StateManager<[MustBeVariant] TState> where TState : notnull
 {
     public event Action<bool> StateChanged;
 
-    private Dictionary<TState, State<TState>> states = [];
+    Dictionary<TState, State<TState>> states = [];
 
-    private double stateTimeRemaining = 0.0f;
-    private double preActivationTimeRemaining = 0.0f;
+    double stateTimeRemaining = 0.0f;
+    double preActivationTimeRemaining = 0.0f;
 
-    private TState pendingNextState = default;
-    private bool hasPendingNextState = false;
-    private TState pendingStateToActivate = default;
-    private bool hasPendingPreActivation = false;
-    private TState currentStateName = default;
+    TState pendingNextState = default;
+    bool hasPendingNextState = false;
+    TState pendingStateToActivate = default;
+    bool hasPendingPreActivation = false;
+    TState currentStateName = default;
 
     public void Update(double delta)
     {
